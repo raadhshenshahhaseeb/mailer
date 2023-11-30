@@ -1,6 +1,8 @@
 package store
 
-import "time"
+import (
+	"time"
+)
 
 type Emails struct {
 	Email     string    `json:"email"`
@@ -10,8 +12,15 @@ type Emails struct {
 
 func (s *store) InsertRecord(email string) error {
 	// Prepare the insert statement
-	s.sqlMutex.Lock()
-	defer s.sqlMutex.Unlock()
+	exists, err := s.exists(email)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return nil
+	}
+
 	stmt, err := s.sqlDB.Prepare("INSERT INTO emails(email) VALUES(?)")
 	if err != nil {
 		return err
@@ -25,6 +34,28 @@ func (s *store) InsertRecord(email string) error {
 	}
 
 	return nil
+}
+
+func (s *store) exists(email string) (bool, error) {
+	stmt, err := s.sqlDB.Prepare("SELECT COUNT(*) FROM emails WHERE email = ?")
+	if err != nil {
+		return false, err
+	}
+	defer stmt.Close()
+
+	// Execute the query to check for the email
+	var count int
+	err = stmt.QueryRow(email).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	// If the email already exists, return an error or handle as needed
+	if count > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (s *store) Get() (*[]Emails, error) {
