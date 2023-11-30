@@ -69,4 +69,5 @@ type store struct {
 
 type Store interface {
 	InsertRecord(email string) error
+	Get() (*[]Emails, error)
 }

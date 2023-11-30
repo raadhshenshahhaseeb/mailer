@@ -21,6 +21,7 @@ func (a *Api) Cors() {
 func (a *Api) Routes() {
 	a.router.Route("/email", func(r chi.Router) {
 		r.Post("/add", a.mailController.Add)
+		r.Get("/all", a.mailController.Get)
 	})
 }
 
